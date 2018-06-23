@@ -1,0 +1,7 @@
+[package]
+name = "whit"
+version = "0.0.1"
+authors = ["Nathan Jaremko <njaremko@gmail.com>"]
+
+[dependencies]
+iota-lib-rs = "*"

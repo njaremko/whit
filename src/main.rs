@@ -19,7 +19,7 @@ use rocket::http::Status;
 use rocket::response::Response;
 use rocket_contrib::{Json, Value};
 
-use crate::commands::node_info::get_node_info;
+use crate::commands::node_info::*;
 use crate::commands::neighbor::*;
 use crate::commands::transactions::*;
 use crate::commands::addresses::*;
@@ -42,7 +42,7 @@ pub struct IotaCommand {
 }
 
 #[post("/", data = "<request>")]
-fn index(request: Json<IotaCommand>) -> Result<Json<Value>, Error> {
+fn command_handler(request: Json<IotaCommand>) -> Result<Json<Value>, Error> {
     match request.command.as_ref() {
         "getNodeInfo" => get_node_info(),
         "getNeighbors" => get_neighbors(),
@@ -62,28 +62,6 @@ fn index(request: Json<IotaCommand>) -> Result<Json<Value>, Error> {
     }
 }
 
-fn get_tips() -> Result<Json<Value>, Error> {
-    Ok(Json(json!("")))
-}
-
-fn get_trytes(request: &Json<IotaCommand>) -> Result<Json<Value>, Error> {
-    match &request.hashes {
-        Some(hashes) => Ok(Json(json!(hashes))),
-        None => Err(format_err!("No hashes provided")),
-    }
-}
-
-fn get_inclusion_states(request: &Json<IotaCommand>) -> Result<Json<Value>, Error> {
-    match &request.transactions {
-        Some(transactions) => Ok(Json(json!(transactions))),
-        None => Err(format_err!("No hashes provided")),
-    }
-}
-
-fn interrupt_attaching_to_tangle() -> Result<Json<Value>, Error> {
-        Ok(Json(json!("")))
-}
-
 fn main() {
-    rocket::ignite().mount("/", routes![index]).launch();
+    rocket::ignite().mount("/", routes![command_handler]).launch();
 }

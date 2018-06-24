@@ -1,6 +1,6 @@
+use crate::IotaCommand;
 use failure::Error;
 use rocket_contrib::{Json, Value};
-use crate::IotaCommand;
 
 pub fn find_transactions(request: &IotaCommand) -> Result<Json<Value>, Error> {
     match &request.addresses {
@@ -38,5 +38,5 @@ pub fn attach_to_tangle(request: &IotaCommand) -> Result<Json<Value>, Error> {
 }
 
 pub fn interrupt_attaching_to_tangle() -> Result<Json<Value>, Error> {
-        Ok(Json(json!("")))
+    Ok(Json(json!("")))
 }

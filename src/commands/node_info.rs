@@ -1,6 +1,6 @@
+use crate::IotaCommand;
 use failure::Error;
 use rocket_contrib::{Json, Value};
-use crate::IotaCommand;
 
 use crate::VERSION;
 

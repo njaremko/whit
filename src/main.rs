@@ -12,6 +12,7 @@ extern crate serde_json;
 extern crate failure;
 
 pub mod commands;
+pub mod config;
 
 use failure::Error;
 use rocket;
@@ -19,12 +20,11 @@ use rocket::http::Status;
 use rocket::response::Response;
 use rocket_contrib::{Json, Value};
 
-use crate::commands::node_info::*;
-use crate::commands::neighbor::*;
-use crate::commands::transactions::*;
 use crate::commands::addresses::*;
+use crate::commands::neighbor::*;
+use crate::commands::node_info::*;
+use crate::commands::transactions::*;
 
-static PHRASE: &'static [u8] = b"Hello World!";
 pub const VERSION: &str = "0.0.1";
 
 #[derive(Serialize, Deserialize)]
@@ -62,6 +62,13 @@ fn command_handler(request: Json<IotaCommand>) -> Result<Json<Value>, Error> {
     }
 }
 
+#[get("/")]
+fn index() -> &'static str {
+    "Hello World"
+}
+
 fn main() {
-    rocket::ignite().mount("/", routes![command_handler]).launch();
+    rocket::ignite()
+        .mount("/", routes![index, command_handler])
+        .launch();
 }

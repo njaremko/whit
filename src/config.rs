@@ -68,10 +68,10 @@ pub struct Config {
     q_size_node: usize,
     p_drop_cache_entry: f64,
     cache_size_bytes: usize,
-    coordinator: String,
+    coordinator: &'static str,
     dont_validate_testnet_milestone_sig: bool,
-    snapshot_file: String,
-    snapshot_signature_file: String,
+    snapshot_file: &'static str,
+    snapshot_signature_file: &'static str,
     milestone_start_index: usize,
     number_of_keys_in_a_milestone: usize,
     transaction_packet_size: usize,
@@ -84,26 +84,26 @@ impl Default for Config {
     fn default() -> Config {
         Config {
             port: 14600,
-            api_host: "localhost",
+            api_host: "localhost".to_string(),
             udp_receiver_port: 14600,
             tcp_receiver_port: 15600,
             testnet: false,
             debug: false,
             remote_limit_api: None,
             remote_auth: None,
-            neighbors: "",
-            ixi_dir: "ixi",
-            db_path: "mainnetdb",
-            db_log_path: "mainnet.log",
+            neighbors: String::new(),
+            ixi_dir: "ixi".to_string(),
+            db_path: "mainnetdb".to_string(),
+            db_log_path: "mainnet.log".to_string(),
             db_cache_size: 100000,
-            config: "iota.ini",
+            config: "iota.ini".to_string(),
             p_remove_request: 0.01,
             p_drop_transaction: 0.0,
             p_select_milestone_child: 0.7,
             p_send_milestone: 0.02,
             p_reply_random_tip: 0.66,
             p_propagate_request: 0.01,
-            main_db: "rocksdb",
+            main_db: "rocksdb".to_string(),
             export: false,
             send_limit: -1.0,
             max_peers: 0,
@@ -121,7 +121,7 @@ impl Default for Config {
             max_body_length: 1000000,
             zmq_enabled: false,
             zmq_port: 5556,
-            zmq_ipc: "ipc://iri",
+            zmq_ipc: "ipc://iri".to_string(),
             zmq_threads: 2,
             q_size_node: 1000,
             p_drop_cache_entry: 0.02,
@@ -134,8 +134,7 @@ impl Default for Config {
             number_of_keys_in_a_milestone: MAINNET_NUM_KEYS_IN_MILESTONE,
             transaction_packet_size: PACKET_SIZE,
             request_hash_size: REQ_HASH_SIZE,
-            snapshot_time,
-            GLOBAL_SNAPSHOT_TIME,
+            snapshot_time: 0,
             tip_selection_alpha: 0.001,
         }
     }
@@ -146,12 +145,12 @@ impl Config {
         self.port
     }
     pub fn port_mut(&mut self) -> &mut usize {
-        self.port
+        &mut self.port
     }
     pub fn api_host(&self) -> &str {
         &self.api_host
     }
-    pub fn api_host(&mut self) -> &mut String {
+    pub fn api_host_mut(&mut self) -> &mut String {
         &mut self.api_host
     }
 }

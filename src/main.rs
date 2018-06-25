@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![feature(plugin)]
 #![feature(rust_2018_preview)]
 #![feature(rust_2018_idioms)]
@@ -7,12 +8,13 @@
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-
 #[macro_use]
 extern crate failure;
 
 pub mod commands;
 pub mod config;
+pub mod model;
+pub mod storage;
 
 use failure::Error;
 use rocket;

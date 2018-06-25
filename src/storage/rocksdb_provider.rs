@@ -1,13 +1,13 @@
 use super::traits::PersistenceProvider;
 use failure::Error;
-use rocksdb::{IteratorMode, Options, DB};
+use rocksdb::{IteratorMode, Options, DB, WriteBatch};
 use std::slice::Iter;
 
-struct DbInstance {
+pub struct DbInstance {
     db: DB,
 }
 
-enum Columns {
+pub enum Columns {
     Transaction,
     TransactionMetadata,
     Milestone,
@@ -78,12 +78,6 @@ impl Default for DbInstance {
     }
 }
 
-impl DbInstance {
-    pub fn current(&self) -> &DB {
-        &self.db
-    }
-}
-
 impl PersistenceProvider for DbInstance {
     fn save(&self, column: &str, index: &[u8], model: &[u8]) -> Result<(), Error> {
         if let Some(handle) = self.db.cf_handle(column) {
@@ -142,6 +136,47 @@ impl PersistenceProvider for DbInstance {
                 return Ok(db_vec.to_vec());
             }
             return Err(format_err!("No matching value in column: {}", column));
+        }
+        Err(format_err!("No column with that name"))
+    }
+
+    fn clear(&mut self, column: &str) -> Result<(), Error> { 
+           self.flush_handle(column)?;
+           Ok(())
+    }
+
+    fn clear_metadata(&mut self) -> Result<(), Error> {
+        self.flush_handle(Columns::TransactionMetadata.column_str())?;
+        Ok(())
+    }
+
+    fn save_batch(&self, models: &[(Columns, Vec<u8>, Vec<u8>)]) -> Result<(), Error> {
+        let mut batch = WriteBatch::default();
+        for (column, key, value) in models.into_iter() {
+            match self.db.cf_handle(column.column_str()) {
+                Some(handle) => batch.put_cf(handle, key, value)?,
+                None => return Err(format_err!("No column with that name")),
+            }
+        }
+        self.db.write(batch)?;
+        Ok(())
+    }
+}
+
+impl DbInstance {
+    pub fn current(&self) -> &DB {
+        &self.db
+    }
+
+    fn flush_handle(&self, column: &str) -> Result<(), Error> {
+        if let Some(handle) = self.db.cf_handle(column) {
+            let iter = self.db.iterator_cf(handle, IteratorMode::Start)?;
+            let mut batch = WriteBatch::default();
+            for (key, _) in iter {
+                batch.delete_cf(handle, &key)?
+            }
+            self.db.write(batch)?;
+            return Ok(());
         }
         Err(format_err!("No column with that name"))
     }

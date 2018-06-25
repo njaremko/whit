@@ -8,31 +8,24 @@ Project goals include:
 - [ ] Use a lot less resources
 
 Things that need to get done:
-- [ ] Implement the hashing library
-  - [x] Curl
-  - [x] Kerl
-  - [ ] ISS
-  - [x] PearlDiver
-  - [ ] Audit!
-- [x] Implement Ternary conversions
-- [ ] Implement the storage library
+- [x] Implement http router
+- [x] Implement parser for api commands
+
+- [ ] Implement storage backends
   - [ ] File
-  - [ ] ZMQ
   - [ ] rocksDB
 - [ ] Implement the network library
 - [ ] Implement the service library
 - [ ] Implement the controllers
 - [ ] Implement configuration
 - [x] Implement the model
-  - [x] Address
-  - [x] Approvee
-  - [x] Bundle
-  - [x] Hash
-  - [x] Hashes
-  - [x] IntegerIndex
-  - [x] Milestone
-  - [x] StateDiff
-  - [x] Tag
-  - [x] Transaction
 - [x] Implement validators
 - [ ] Lots of tests
+
+Functionality provided by iota-lib-rs
+- [x] Implement all of the Iota hashes
+  - [x] Curl
+  - [x] Kerl
+  - [x] ISS
+  - [x] PearlDiver
+- [x] Implement Ternary conversions and utilities

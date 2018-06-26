@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::Path;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::RwLock;
 
 const SNAPSHOT_PUBKEY: &str =
@@ -14,14 +15,24 @@ const SPENT_ADDRESSES_INDEX: usize = 3;
 
 struct Snapshot {
     state: RwLock<HashMap<Vec<u8>, usize>>,
-    index: usize,
+    index: AtomicUsize,
+}
+
+impl Clone for Snapshot {
+    fn clone(&self) -> Snapshot {
+        let state = self.state.read().unwrap().clone();
+        Snapshot {
+            state: RwLock::new(state),
+            index: AtomicUsize::new(self.index.load(Ordering::SeqCst)),
+        }
+    }
 }
 
 impl Snapshot {
     pub fn new(state: HashMap<Vec<u8>, usize>, index: usize) -> Snapshot {
         Snapshot {
             state: RwLock::new(state),
-            index,
+            index: AtomicUsize::new(index),
         }
     }
 
@@ -50,7 +61,35 @@ impl Snapshot {
     }
 
     pub fn index(&self) -> usize {
-        self.index
+        self.index.load(Ordering::SeqCst)
+    }
+
+    pub fn balance(&self, hash: &[u8]) -> Option<usize> {
+        if let Some(t) = self.state.read().unwrap().get(hash) {
+            return Some(t.clone());
+        }
+        None
+    }
+
+    pub fn patched_diff(&self, diff: HashMap<Vec<u8>, usize>) -> HashMap<Vec<u8>, usize> {
+        diff.iter()
+            .map(|(key, val)| match self.state.read().unwrap().get(key) {
+                Some(t) => (key.clone(), t + val),
+                None => (key.clone(), val.clone()),
+            })
+            .collect()
+    }
+
+    pub fn apply(&self, patch: HashMap<Vec<u8>, usize>, new_index: usize) -> Result<(), Error> {
+        ensure!(patch.iter().map(|(_, val)| val).sum() == 0, "Diff is not consistent.");
+        for (key, val) in patch {
+            match self.state.read().unwrap().get(&key) {
+                Some(t) => self.state.write().unwrap().insert(key, t + val),
+                None => self.state.write().unwrap().insert(key, val),
+            };
+        }
+        self.index.store(new_index, Ordering::SeqCst);
+        Ok(())
     }
 }
 

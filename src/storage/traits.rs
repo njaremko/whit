@@ -1,10 +1,7 @@
+use super::rocksdb_provider::Column;
 use failure::Error;
-use super::rocksdb_provider::Columns;
 
 pub trait PersistenceProvider {
-    //fn init();
-    //fn is_available() -> bool;
-    //fn shutdown();
     fn save(&self, column: &str, index: &[u8], model: &[u8]) -> Result<(), Error>;
     fn delete(&self, column: &str, index: &[u8]) -> Result<(), Error>;
     fn update(&self, column: &str, index: &[u8], model: &[u8]) -> Result<(), Error>;
@@ -19,7 +16,7 @@ pub trait PersistenceProvider {
     // fn next();
     // fn previous();
     fn first(&self, column: &str) -> Result<(Vec<u8>, Vec<u8>), Error>;
-    fn save_batch(&self, models: &[(Columns, Vec<u8>, Vec<u8>)]) -> Result<(), Error>;
+    fn save_batch(&self, models: &[(&str, Vec<u8>, Vec<u8>)]) -> Result<(), Error>;
     fn clear(&mut self, column: &str) -> Result<(), Error>;
     fn clear_metadata(&mut self) -> Result<(), Error>;
 }

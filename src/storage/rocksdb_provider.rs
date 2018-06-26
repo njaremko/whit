@@ -1,13 +1,21 @@
 use super::traits::PersistenceProvider;
 use failure::Error;
-use rocksdb::{IteratorMode, Options, DB, WriteBatch};
+use rocksdb::{IteratorMode, Options, WriteBatch, DB};
 use std::slice::Iter;
 
+/// This module provides an implementation of the PersistanceProvider
+/// trait for the RocksDB backend.
+
+/// DbInstance holds a reference to the rocksdb instance,
+/// If DbInstance goes out of scope, the rocksdb instance is
+/// automatically closed
 pub struct DbInstance {
     db: DB,
 }
 
-pub enum Columns {
+/// This is used to prevent spelling mistakes when referencing
+/// column families
+pub enum Column {
     Transaction,
     TransactionMetadata,
     Milestone,
@@ -19,9 +27,9 @@ pub enum Columns {
     Tag,
 }
 
-impl Columns {
+impl Column {
     pub fn column_str(&self) -> &'static str {
-        use self::Columns::*;
+        use self::Column::*;
         match self {
             Transaction => "transaction",
             TransactionMetadata => "transaction-metadata",
@@ -35,9 +43,9 @@ impl Columns {
         }
     }
 
-    pub fn iter() -> Iter<'static, Columns> {
-        use self::Columns::*;
-        static COLUMNS: [Columns; 9] = [
+    pub fn iter() -> Iter<'static, Column> {
+        use self::Column::*;
+        static COLUMN: [Column; 9] = [
             Transaction,
             TransactionMetadata,
             Milestone,
@@ -48,24 +56,15 @@ impl Columns {
             ObsoleteTag,
             Tag,
         ];
-        COLUMNS.into_iter()
+        COLUMN.into_iter()
     }
 
-    pub fn column_str_list() -> [&'static str; 9] {
-        [
-            "transaction",
-            "transaction-metadata",
-            "milestone",
-            "stateDiff",
-            "address",
-            "approvee",
-            "bundle",
-            "obsoleteTag",
-            "tag",
-        ]
+    pub fn column_str_list() -> Vec<&'static str> {
+        Column::iter().map(|c| c.column_str()).collect()
     }
 }
 
+/// Used to open the db with reasonable defaults
 impl Default for DbInstance {
     fn default() -> DbInstance {
         let mut opts = Options::default();
@@ -73,7 +72,7 @@ impl Default for DbInstance {
         opts.create_missing_column_families(true);
         opts.increase_parallelism(4);
         DbInstance {
-            db: DB::open_cf(&opts, "/iota_db", &Columns::column_str_list()).unwrap(),
+            db: DB::open_cf(&opts, "/iota_db", &Column::column_str_list()).unwrap(),
         }
     }
 }
@@ -140,20 +139,20 @@ impl PersistenceProvider for DbInstance {
         Err(format_err!("No column with that name"))
     }
 
-    fn clear(&mut self, column: &str) -> Result<(), Error> { 
-           self.flush_handle(column)?;
-           Ok(())
-    }
-
-    fn clear_metadata(&mut self) -> Result<(), Error> {
-        self.flush_handle(Columns::TransactionMetadata.column_str())?;
+    fn clear(&mut self, column: &str) -> Result<(), Error> {
+        self.flush_handle(column)?;
         Ok(())
     }
 
-    fn save_batch(&self, models: &[(Columns, Vec<u8>, Vec<u8>)]) -> Result<(), Error> {
+    fn clear_metadata(&mut self) -> Result<(), Error> {
+        self.flush_handle(Column::TransactionMetadata.column_str())?;
+        Ok(())
+    }
+
+    fn save_batch(&self, models: &[(&str, Vec<u8>, Vec<u8>)]) -> Result<(), Error> {
         let mut batch = WriteBatch::default();
         for (column, key, value) in models.into_iter() {
-            match self.db.cf_handle(column.column_str()) {
+            match self.db.cf_handle(column) {
                 Some(handle) => batch.put_cf(handle, key, value)?,
                 None => return Err(format_err!("No column with that name")),
             }
@@ -170,8 +169,8 @@ impl DbInstance {
 
     fn flush_handle(&self, column: &str) -> Result<(), Error> {
         if let Some(handle) = self.db.cf_handle(column) {
-            let iter = self.db.iterator_cf(handle, IteratorMode::Start)?;
             let mut batch = WriteBatch::default();
+            let iter = self.db.iterator_cf(handle, IteratorMode::Start)?;
             for (key, _) in iter {
                 batch.delete_cf(handle, &key)?
             }

@@ -14,6 +14,9 @@ extern crate failure;
 pub mod commands;
 pub mod config;
 pub mod model;
+pub mod network;
+pub mod signed_files;
+pub mod snapshot;
 pub mod storage;
 
 use failure::Error;

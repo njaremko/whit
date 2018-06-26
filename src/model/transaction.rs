@@ -1,3 +1,4 @@
+pub const SUPPLY: usize = 2779530283277761;
 const SIZE: usize = 1604;
 
 use serde_json;

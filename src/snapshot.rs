@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::RwLock;
 
@@ -81,7 +80,7 @@ impl Snapshot {
     }
 
     pub fn apply(&self, patch: HashMap<Vec<u8>, usize>, new_index: usize) -> Result<(), Error> {
-        ensure!(patch.iter().map(|(_, val)| val).sum() == 0, "Diff is not consistent.");
+        ensure!(patch.iter().map(|(_, val)| val).sum::<usize>() == 0, "Diff is not consistent.");
         for (key, val) in patch {
             match self.state.read().unwrap().get(&key) {
                 Some(t) => self.state.write().unwrap().insert(key, t + val),

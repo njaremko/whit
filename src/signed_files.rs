@@ -17,25 +17,18 @@ pub fn is_file_signature_valid(
     depth: usize,
     index: usize,
 ) -> Result<bool, Error> {
-    let trits = [0; HASH_LENGTH];
-    let mut curl = Kerl::default();
-    {
-        let f = File::open(filename)?;
-        let reader = BufReader::new(f);
-        for line in reader.lines() {
-            let trits = converter::trits_from_string(&trytes_converter::to_trytes(&line?)?);
-            curl.absorb(&trits);
-        }
-    }
-    let mut trits = [0; HASH_LENGTH];
-    curl.squeeze(&mut trits);
+    let signature = digest_file(filename)?;
+    validate_signature(sigature_filename, public_key, depth, index, &signature)
+}
+
+fn validate_signature(filename: &str, public_key: &str, depth: usize, index: usize, digest: &[i8]) -> Result<bool, Error>{
     let mode = Mode::CURLP81;
-    let bundle = iss::normalized_bundle(&trits)?;
     let mut digests: Vec<i8> = Vec::new();
+    let bundle = iss::normalized_bundle(&digest)?;
     let f = File::open(filename)?;
     let reader = BufReader::new(f);
-    let mut i = 0;
     let mut root = [0; HASH_LENGTH];
+    let mut i = 0;
     for line in reader.lines().take(5) {
         if i < 3 {
             let mut line_trits = converter::trits_from_string(&line?);
@@ -65,3 +58,20 @@ pub fn is_file_signature_valid(
 
     Ok(pub_key_trits == root.to_vec())
 }
+
+fn digest_file(filename: &str) -> Result<[i8; HASH_LENGTH], Error> {
+    let mut curl = Kerl::default();
+    {
+        let f = File::open(filename)?;
+        let reader = BufReader::new(f);
+        for line in reader.lines() {
+            let trits = converter::trits_from_string(&trytes_converter::to_trytes(&line?)?);
+            curl.absorb(&trits);
+        }
+    }
+    let mut trits = [0; HASH_LENGTH];
+    curl.squeeze(&mut trits);
+    Ok(trits)
+}
+
+

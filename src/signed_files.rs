@@ -1,6 +1,6 @@
-use iota_lib_rs::pow::iss;
-use iota_lib_rs::pow::kerl::Kerl;
-use iota_lib_rs::pow::sponge::{Mode, Sponge, HASH_LENGTH};
+use iota_lib_rs::crypto::iss;
+use iota_lib_rs::crypto::Kerl;
+use iota_lib_rs::crypto::{HashMode, Sponge, HASH_LENGTH};
 use iota_lib_rs::utils::converter;
 use iota_lib_rs::utils::trytes_converter;
 
@@ -21,8 +21,14 @@ pub fn is_file_signature_valid(
     validate_signature(sigature_filename, public_key, depth, index, &signature)
 }
 
-fn validate_signature(filename: &str, public_key: &str, depth: usize, index: usize, digest: &[i8]) -> Result<bool, Error>{
-    let mode = Mode::CURLP81;
+fn validate_signature(
+    filename: &str,
+    public_key: &str,
+    depth: usize,
+    index: usize,
+    digest: &[i8],
+) -> Result<bool, Error> {
+    let mode = HashMode::CURLP81;
     let mut digests: Vec<i8> = Vec::new();
     let bundle = iss::normalized_bundle(&digest)?;
     let f = File::open(filename)?;
@@ -47,7 +53,7 @@ fn validate_signature(filename: &str, public_key: &str, depth: usize, index: usi
                 0,
                 index,
                 depth,
-            );
+            )?;
         }
         i += 1;
     }
@@ -73,5 +79,3 @@ fn digest_file(filename: &str) -> Result<[i8; HASH_LENGTH], Error> {
     curl.squeeze(&mut trits);
     Ok(trits)
 }
-
-

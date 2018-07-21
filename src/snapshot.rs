@@ -80,7 +80,10 @@ impl Snapshot {
     }
 
     pub fn apply(&self, patch: HashMap<Vec<u8>, usize>, new_index: usize) -> Result<(), Error> {
-        ensure!(patch.iter().map(|(_, val)| val).sum::<usize>() == 0, "Diff is not consistent.");
+        ensure!(
+            patch.iter().map(|(_, val)| val).sum::<usize>() == 0,
+            "Diff is not consistent."
+        );
         for (key, val) in patch {
             match self.state.read().unwrap().get(&key) {
                 Some(t) => self.state.write().unwrap().insert(key, t + val),

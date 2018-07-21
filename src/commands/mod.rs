@@ -1,4 +1,9 @@
-pub mod addresses;
-pub mod neighbor;
-pub mod node_info;
-pub mod transactions;
+mod addresses;
+mod neighbor;
+mod node_info;
+mod transactions;
+
+pub use self::addresses::*;
+pub use self::neighbor::*;
+pub use self::node_info::*;
+pub use self::transactions::*;

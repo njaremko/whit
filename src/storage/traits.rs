@@ -1,4 +1,4 @@
-use super::rocksdb_provider::Column;
+//use super::rocksdb_provider::Column;
 use failure::Error;
 
 pub trait PersistenceProvider {

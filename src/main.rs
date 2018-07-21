@@ -10,6 +10,9 @@ extern crate serde_derive;
 extern crate serde_json;
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate lazy_static;
+extern crate reqwest;
 
 pub mod commands;
 pub mod config;
@@ -24,13 +27,29 @@ use rocket;
 use rocket::http::Status;
 use rocket::response::Response;
 use rocket_contrib::{Json, Value};
+use reqwest::Client;
 
-use crate::commands::addresses::*;
-use crate::commands::neighbor::*;
-use crate::commands::node_info::*;
-use crate::commands::transactions::*;
+use crate::commands::*;
 
 pub const VERSION: &str = "0.0.1";
+
+lazy_static! {
+    static ref IRI_URLS: [&'static str; 8] = {
+        [
+            "https://pow1.iota.community",
+            "https://pow2.iota.community",
+            "https://pow3.iota.community",
+            "https://pow4.iota.community",
+            "https://pow5.iota.community",
+            "https://pow6.iota.community",
+            "https://nodes.iota.fm",
+            "https://trinity.iota.fm",
+        ]
+    };
+    static ref CLIENT: reqwest::Client = {
+            Client::new()
+    };
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct IotaCommand {

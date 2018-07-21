@@ -2,7 +2,7 @@ use crate::IotaCommand;
 use failure::Error;
 use rocket_contrib::{Json, Value};
 
-use iota_lib_rs::model::neighbor::Neighbor;
+use iota_lib_rs::model::Neighbor;
 
 pub fn get_neighbors() -> Result<Json<Value>, Error> {
     Ok(Json(json!({
